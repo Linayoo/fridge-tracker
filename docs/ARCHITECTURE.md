@@ -57,7 +57,6 @@ Future hook: a nullable `place_id: int | None` column can be added in a single A
 | unit         | String(50)             | free string: "kg", "L", "pieces"     |
 | category     | String(50)             | enum-like string, see categories     |
 | position     | Integer                | order within shelf, 0 = top          |
-| added_at     | DateTime(tz)           | server default `now()`               |
 | expires_at   | DateTime(tz) or null   | nullable                             |
 | created_at   | DateTime(tz)           | server default `now()`               |
 | updated_at   | DateTime(tz)           | server default + onupdate            |

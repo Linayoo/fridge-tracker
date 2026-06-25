@@ -37,12 +37,14 @@ List all shelves, ordered by `position`. Includes item summaries inline (id, nam
 
 ### `POST /shelves`
 
-Create a shelf. `position` defaults to the next available slot (end of list).
+Create a shelf. `position` is optional — if omitted, the server assigns `max(position) + 1` across all shelves (appends to the end).
 
 Request:
 ```json
-{ "name": "Top shelf", "position": 0 }
+{ "name": "Top shelf" }
 ```
+
+`position` may be included to insert at a specific slot, but the caller is responsible for keeping positions contiguous in that case.
 
 Response: 201, full shelf object (without items).
 
@@ -84,7 +86,7 @@ Response: 200, the updated list of shelves.
 
 ### `POST /shelves/{shelf_id}/items`
 
-Add an item to a shelf.
+Add an item to a shelf. `position` is optional — if omitted, the server assigns `max(position) + 1` within the target shelf (appends to the end).
 
 Request:
 ```json
@@ -97,7 +99,7 @@ Request:
 }
 ```
 
-`position` defaults to the end of the shelf.
+`position` may be included to insert at a specific slot.
 
 Response: 201, full item object.
 
@@ -135,9 +137,11 @@ Response: 200, the updated list of items.
 
 ## Search
 
-### `GET /items/search?q={query}`
+### `GET /search/items?q={query}`
 
 Case-insensitive `ILIKE '%query%'` against `name`. Returns items across all shelves.
+
+Lives in its own router (`app/routers/search.py`), not in `items.py`, to avoid the routing ambiguity that would arise from `GET /items/{id}` and `GET /items/search` sharing the same prefix.
 
 Query params:
 - `q` (required): search string, at least 1 character

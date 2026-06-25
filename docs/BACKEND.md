@@ -37,6 +37,7 @@ backend/
 │       ├── __init__.py
 │       ├── shelves.py
 │       ├── items.py
+│       ├── search.py        # GET /search/items (separate to avoid /items/{id} conflict)
 │       ├── categories.py
 │       └── health.py        # /healthz endpoint
 ├── alembic/
@@ -48,10 +49,19 @@ backend/
     ├── conftest.py          # fixtures: client, db_session, factories
     ├── test_shelves.py
     ├── test_items.py
+    ├── test_search.py
     └── test_categories.py
 ```
 
 Keep `models.py` and `schemas.py` as single files for v1. If they grow past ~300 lines, split per resource (`models/shelves.py`, `models/items.py`).
+
+### Pydantic schema naming convention
+
+- `ShelfCreate` / `ItemCreate` — inbound request bodies (all optional fields except required ones)
+- `ShelfUpdate` / `ItemUpdate` — PATCH request bodies (all fields optional)
+- `ItemSummary` — the trimmed shape embedded in `GET /shelves` responses: `id`, `name`, `category`, `position`, `expires_at` only
+- `ShelfOut` / `ItemOut` — full response shapes returned by all other endpoints
+- `ShelfWithItems` — `ShelfOut` extended with an `items: list[ItemSummary]` field, used only for `GET /shelves`
 
 ## Conventions
 
