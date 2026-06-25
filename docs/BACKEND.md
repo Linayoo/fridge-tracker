@@ -21,10 +21,13 @@
 backend/
 ├── pyproject.toml
 ├── poetry.lock
+├── requirements.txt             # Docker build artifact — see "Docker build artifact" section
 ├── Dockerfile
 ├── docker-compose.yml
+├── entrypoint.sh                # alembic upgrade head && uvicorn
 ├── alembic.ini
 ├── .pre-commit-config.yaml
+├── .env.example                 # copy to .env for local dev
 ├── app/
 │   ├── __init__.py
 │   ├── main.py              # FastAPI app, CORS, route registration
@@ -217,6 +220,21 @@ Pre-commit runs `ruff format` and `ruff check --fix` before every commit.
 - pre-commit
 
 Do not add other dependencies without an explicit reason.
+
+## Docker build artifact
+
+`requirements.txt` in `backend/` is **not the source of truth for dependencies** — `pyproject.toml` and `poetry.lock` are. It exists solely because Poetry 2.x crashes with SIGILL inside `python:3.11-slim` on Apple Silicon when `POETRY_VIRTUALENVS_CREATE=false`, making `poetry install` unusable in Docker. The Dockerfile therefore uses `pip install -r requirements.txt` instead.
+
+Rules:
+- Do not edit `requirements.txt` by hand.
+- After any `poetry add` or `poetry remove`, regenerate it by running:
+  ```bash
+  python3 scripts/export_requirements.py
+  ```
+  (that script is a follow-up task — for now, run the inline Python that was used during scaffolding)
+- Commit the updated `requirements.txt` alongside the lock file change.
+
+A `make requirements` target should be added soon to make this one step.
 
 ## Local run
 
