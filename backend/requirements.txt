@@ -1,5 +1,6 @@
-# Auto-generated from poetry.lock for Docker builds. Do not edit directly.
-# Regenerate with: python3 scripts/export_requirements.py
+# Auto-generated from poetry.lock — do not edit by hand.
+# Regenerate: make requirements
+#   (uses poetry-plugin-export if installed, otherwise scripts/export_requirements.py)
 alembic==1.18.5
 annotated-types==0.7.0
 anyio==4.14.1

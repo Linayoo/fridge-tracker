@@ -2,8 +2,11 @@
 
 # Regenerate the Docker build artifact from poetry.lock.
 # Run this after any `poetry add` or `poetry remove`.
+# Tries poetry-plugin-export first; falls back to scripts/export_requirements.py
+# when the plugin is unavailable (common on Homebrew-managed Poetry installs).
 requirements:
-	poetry export --without-hashes --without dev -f requirements.txt -o requirements.txt
+	poetry export --without-hashes --without dev -f requirements.txt -o requirements.txt 2>/dev/null \
+		|| python3 scripts/export_requirements.py
 
 test:
 	poetry run pytest

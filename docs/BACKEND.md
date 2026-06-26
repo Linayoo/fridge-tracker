@@ -227,14 +227,13 @@ Do not add other dependencies without an explicit reason.
 
 Rules:
 - Do not edit `requirements.txt` by hand.
-- After any `poetry add` or `poetry remove`, regenerate it by running:
+- After any `poetry add` or `poetry remove`, regenerate it with:
   ```bash
-  python3 scripts/export_requirements.py
+  make requirements
   ```
-  (that script is a follow-up task — for now, run the inline Python that was used during scaffolding)
+  This tries `poetry export` (requires `poetry-plugin-export`) and falls back to
+  `scripts/export_requirements.py` automatically.
 - Commit the updated `requirements.txt` alongside the lock file change.
-
-A `make requirements` target should be added soon to make this one step.
 
 ## Local run
 
