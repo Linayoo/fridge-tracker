@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { ShelfWithItems } from "../api/types";
 import { CategoryIcon } from "./CategoryIcon";
+import { getExpirationStatus } from "../utils/expiration";
 import { colors } from "../utils/colors";
 
 type Props = {
@@ -22,14 +23,24 @@ export function ShelfCard({ shelf, onPress }: Props) {
 
       {preview.length > 0 && (
         <View style={styles.preview}>
-          {preview.map((item) => (
-            <View key={item.id} style={styles.previewRow}>
-              <CategoryIcon slug={item.category} size={14} />
-              <Text style={styles.previewName} numberOfLines={1}>
-                {item.name}
-              </Text>
-            </View>
-          ))}
+          {preview.map((item) => {
+            const status = getExpirationStatus(item.expires_at);
+            const dotColor =
+              status === "expired" ? colors.expired :
+              status === "expiring_soon" ? colors.expiringSoon :
+              null;
+            return (
+              <View key={item.id} style={styles.previewRow}>
+                <CategoryIcon slug={item.category} size={14} />
+                <Text style={styles.previewName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                {dotColor !== null && (
+                  <View style={[styles.dot, { backgroundColor: dotColor }]} />
+                )}
+              </View>
+            );
+          })}
           {shelf.items.length > 3 && (
             <Text style={styles.more}>+{shelf.items.length - 3} more</Text>
           )}
@@ -82,5 +93,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontStyle: "italic",
     marginTop: 2,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
 });
