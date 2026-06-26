@@ -70,11 +70,24 @@ Phone and laptop must be on the same Wi-Fi.
 5. Open PR on GitHub. CI runs ruff + pytest.
 6. Merge once green.
 
+### Makefile shortcuts
+
+All common backend tasks are in `backend/Makefile`. Run from `backend/`:
+
+| Command | What it does |
+|---|---|
+| `make dev` | `docker compose up --build` — full stack |
+| `make test` | `poetry run pytest` |
+| `make lint` | ruff check + format, auto-fix |
+| `make migrate` | `alembic upgrade head` |
+| `make migration name="feat: add foo"` | autogenerate a new migration |
+| `make requirements` | regenerate `requirements.txt` from `poetry.lock` |
+
 ### Run tests
 
 ```bash
 cd backend
-poetry run pytest                    # all tests
+make test                            # all tests
 poetry run pytest -k shelves         # tests matching "shelves"
 poetry run pytest -x                 # stop on first failure
 poetry run pytest --lf               # rerun last failed tests
@@ -84,17 +97,17 @@ poetry run pytest --lf               # rerun last failed tests
 
 ```bash
 cd backend
-poetry run alembic revision --autogenerate -m "add foo to bar"
+make migration name="feat: add foo to bar"
 # review the generated file in alembic/versions/
-poetry run alembic upgrade head      # apply
-poetry run alembic downgrade -1      # revert one
+make migrate                         # apply
+poetry run alembic downgrade -1      # revert one (no make target — intentional)
 ```
 
 ### Format and lint
 
 ```bash
-poetry run ruff format .
-poetry run ruff check . --fix
+cd backend
+make lint
 ```
 
 Pre-commit hooks do this automatically, so manual runs are only when fixing a batch.
