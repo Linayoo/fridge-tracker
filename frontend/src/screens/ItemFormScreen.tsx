@@ -15,6 +15,7 @@ import { itemsApi } from "../api/items";
 import { useCategories } from "../hooks/useCategories";
 import { useShelves } from "../hooks/useShelves";
 import { CategoryIcon } from "../components/CategoryIcon";
+import { ErrorBanner } from "../components/ErrorBanner";
 import { colors } from "../utils/colors";
 
 type Props = NativeStackScreenProps<RootStackParamList, "ItemForm">;
@@ -22,8 +23,8 @@ type Props = NativeStackScreenProps<RootStackParamList, "ItemForm">;
 export function ItemFormScreen({ navigation, route }: Props) {
   const { shelfId, itemId } = route.params;
   const isEdit = itemId !== undefined;
-  const { categories } = useCategories();
-  const { shelves } = useShelves();
+  const { categories, error: categoriesError, refresh: refreshCategories } = useCategories();
+  const { shelves, error: shelvesError, refresh: refreshShelves } = useShelves();
 
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -108,11 +109,21 @@ export function ItemFormScreen({ navigation, route }: Props) {
     }
   };
 
+  const hasPickerError = categoriesError != null || (isEdit && shelvesError != null);
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      {hasPickerError ? (
+        <ErrorBanner
+          onRetry={() => {
+            if (categoriesError) refreshCategories();
+            if (isEdit && shelvesError) refreshShelves();
+          }}
+        />
+      ) : null}
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>Name</Text>
         <TextInput

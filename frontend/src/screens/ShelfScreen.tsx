@@ -6,12 +6,14 @@ import type { RootStackParamList } from "../../App";
 import { useItems } from "../hooks/useItems";
 import { ItemRow } from "../components/ItemRow";
 import { EmptyState } from "../components/EmptyState";
+import { ErrorBanner } from "../components/ErrorBanner";
+import { formatError } from "../utils/format";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Shelf">;
 
 export function ShelfScreen({ navigation, route }: Props) {
   const { shelfId, shelfName } = route.params;
-  const { shelf, loading, refresh } = useItems(shelfId);
+  const { shelf, loading, error, refresh } = useItems(shelfId);
 
   // Refresh when returning from ItemForm or ShelfForm
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
@@ -45,27 +47,42 @@ export function ShelfScreen({ navigation, route }: Props) {
     });
   }, [navigation, shelfId, shelfName]);
 
+  const hasData = (shelf?.items ?? []).length > 0;
+
   return (
-    <FlatList
-      data={shelf?.items ?? []}
-      keyExtractor={(item) => String(item.id)}
-      renderItem={({ item }) => (
-        <ItemRow
-          item={item}
-          onPress={() => navigation.navigate("ItemForm", { shelfId, itemId: item.id })}
-        />
-      )}
-      ListEmptyComponent={
-        loading ? null : <EmptyState message="No items yet. Tap + to add one." />
-      }
-      refreshing={loading}
-      onRefresh={refresh}
-      contentContainerStyle={styles.list}
-    />
+    <View style={styles.flex}>
+      {hasData && error ? <ErrorBanner onRetry={refresh} /> : null}
+      <FlatList
+        data={shelf?.items ?? []}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={({ item }) => (
+          <ItemRow
+            item={item}
+            onPress={() => navigation.navigate("ItemForm", { shelfId, itemId: item.id })}
+          />
+        )}
+        ListEmptyComponent={
+          loading ? null : error ? (
+            <EmptyState
+              title="Can't reach the server"
+              message={formatError(error)}
+              actionLabel="Retry"
+              onAction={refresh}
+            />
+          ) : (
+            <EmptyState message="No items yet. Tap + to add one." />
+          )
+        }
+        refreshing={loading}
+        onRefresh={refresh}
+        contentContainerStyle={styles.list}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   list: {
     paddingBottom: 24,
   },
