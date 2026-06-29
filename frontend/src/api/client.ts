@@ -1,6 +1,6 @@
-// Change to your machine's LAN IP when testing on a physical device.
-// Example: "http://192.168.1.42:8000"
-export const BASE_URL = "http://localhost:8000";
+// Set EXPO_PUBLIC_API_URL in frontend/.env.local for device testing.
+// The localhost fallback only works in the iOS/Android simulator, not on a real device.
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {

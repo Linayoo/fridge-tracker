@@ -57,9 +57,24 @@ cd frontend
 npx expo start
 ```
 
-Find your laptop's LAN IP (`ipconfig getifaddr en0` on Mac), update `BASE_URL` in `frontend/src/api/client.ts`, then scan the QR code with the iPhone Camera app (it'll open Expo Go).
+For device testing, copy `.env.example` to `.env.local` and set your laptop's LAN IP:
 
-Phone and laptop must be on the same Wi-Fi.
+```bash
+cd frontend
+cp .env.example .env.local
+# edit .env.local: EXPO_PUBLIC_API_URL=http://<your-ip>:8000
+# find your IP: ipconfig getifaddr en0 (Mac) or hostname -I (Linux)
+```
+
+Expo SDK 49+ auto-loads `.env.local` — no extra config needed. Run with `--clear` whenever you change the env file, since Metro caches env vars:
+
+```bash
+npx expo start --clear
+```
+
+Then scan the QR code with the iPhone Camera app (it'll open Expo Go).
+
+Phone and laptop must be on the same Wi-Fi. `.env.local` is gitignored.
 
 ### Make a change
 
