@@ -9,7 +9,7 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: poetry run pytest -x -q
+        entry: bash -c 'cd "$(git rev-parse --show-toplevel)/backend" && poetry run pytest -x -q'
         language: system
         types: [python]
         pass_filenames: false

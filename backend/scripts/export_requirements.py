@@ -10,6 +10,7 @@ Usage:
     python3 scripts/export_requirements.py   # run from backend/
     make requirements                        # tries poetry export first, then this script
 """
+
 from __future__ import annotations
 
 import sys
@@ -22,8 +23,7 @@ ROOT = Path(__file__).parent.parent  # backend/
 def _transitive(seed: set[str], packages: list[dict]) -> set[str]:
     """BFS from seed package names through poetry.lock dependency graph."""
     dep_map: dict[str, set[str]] = {
-        p["name"].lower(): {d.lower() for d in (p.get("dependencies") or {})}
-        for p in packages
+        p["name"].lower(): {d.lower() for d in (p.get("dependencies") or {})} for p in packages
     }
     visited: set[str] = set()
     queue = list(seed)
@@ -51,17 +51,11 @@ def main() -> None:
         lock = tomllib.load(fh)
 
     # Seed with direct production deps (skip the "python" entry itself).
-    direct = {
-        k.lower()
-        for k in proj["tool"]["poetry"]["dependencies"]
-        if k.lower() != "python"
-    }
+    direct = {k.lower() for k in proj["tool"]["poetry"]["dependencies"] if k.lower() != "python"}
     all_prod = _transitive(direct, lock["package"])
 
     lines = sorted(
-        f"{p['name']}=={p['version']}"
-        for p in lock["package"]
-        if p["name"].lower() in all_prod
+        f"{p['name']}=={p['version']}" for p in lock["package"] if p["name"].lower() in all_prod
     )
 
     out = ROOT / "requirements.txt"
