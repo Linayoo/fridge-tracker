@@ -38,10 +38,12 @@ Owner is a backend-leaning full-stack developer with 3 years of production Rails
 
 ### Deployment
 - Docker for backend
-- AWS App Runner for hosting the API
-- AWS RDS for PostgreSQL
-- AWS Secrets Manager for credentials
-- GitHub Actions for CI/CD
+- AWS ECS Fargate for hosting the API (eu-central-1)
+- AWS ALB (Application Load Balancer) in front of the Fargate service
+- AWS RDS Postgres 16 (db.t4g.micro) for the database
+- AWS Secrets Manager for DB credentials
+- AWS ECR for container images
+- GitHub Actions for CI/CD (planned — currently manual deploys)
 
 ## Code style
 
@@ -87,6 +89,7 @@ Owner is a backend-leaning full-stack developer with 3 years of production Rails
 - Set up Sentry, analytics, or any third-party SaaS
 - Refactor working code "for cleanliness" — only refactor when it's blocking the current task
 - Add dependencies you've heard are popular — only add what's needed for the immediate task
+- Create additional AWS resources without explicit approval — production infrastructure changes are high-stakes
 
 ## Things to do automatically (no need to ask)
 
