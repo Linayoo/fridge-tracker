@@ -2,8 +2,10 @@
 
 ## System diagram
 
+### Logical shape (environment-agnostic)
+
 ```
-┌─────────────────────┐         HTTPS          ┌──────────────────────┐
+┌─────────────────────┐         HTTP/S         ┌──────────────────────┐
 │  React Native App   │ ─────────────────────► │  FastAPI Backend     │
 │  (Expo + TS)        │                        │  (Python 3.11)       │
 │                     │ ◄───────────────────── │                      │
@@ -12,16 +14,45 @@
 │  - Search           │                        │  - Alembic           │
 └─────────────────────┘                        └──────────────────────┘
                                                           │
-                                                          │ TCP
+                                                          │ TCP :5432
                                                           ▼
                                                ┌──────────────────┐
                                                │  PostgreSQL 16   │
-                                               │  (Docker dev /   │
-                                               │   AWS RDS prod)  │
                                                └──────────────────┘
 ```
 
-For the AWS deployment layer, see `DEPLOYMENT.md`.
+### Local dev shape
+
+```
+React Native (Expo Go)  →  localhost:8000 (Docker: FastAPI + uvicorn)
+                                   │
+                                   └──►  localhost:5432 (Docker: Postgres)
+```
+
+Environment config: `EXPO_PUBLIC_API_URL` in `frontend/.env.local` sets the
+app's API base URL. `DATABASE_URL` in `backend/.env` sets the DB connection.
+
+### Production shape (AWS eu-central-1, deployed Week 3)
+
+```
+Expo app (phone)
+    │ HTTP :80
+    ▼
+ALB: fridge-tracker-alb
+    │ HTTP :8000
+    ▼
+Fargate Task: fridge-tracker-api  (FastAPI + uvicorn)
+    │ TCP :5432
+    ▼
+RDS: fridge-tracker-db  (Postgres 16, db.t4g.micro)
+```
+
+`EXPO_PUBLIC_API_URL` in `frontend/.env.local` points at the ALB's DNS name.
+`DATABASE_URL` is injected at task startup from AWS Secrets Manager — the
+application code reads it as a plain environment variable, unaware of AWS.
+
+For full infrastructure detail (security groups, IAM roles, cost, redeploy
+workflow), see `DEPLOYMENT.md`.
 
 ## Why this shape
 
