@@ -1,6 +1,6 @@
 # API Contract
 
-Base URL: `http://localhost:8000` in dev. Production URL set by AWS App Runner.
+Base URL: `http://localhost:8000` in dev. Production URL set by the AWS ALB in front of the ECS Fargate service (see docs/DEPLOYMENT.md).
 
 All endpoints return JSON. All timestamps are ISO 8601 with time zone.
 
