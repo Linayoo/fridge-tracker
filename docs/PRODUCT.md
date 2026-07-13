@@ -65,7 +65,7 @@ A demo that runs at the meetup, where:
 
 1. The owner shows the live app on their phone
 2. Audience scans a QR code, opens it on their own phones, adds an item to the fridge, and sees it appear on the owner's phone
-3. Architecture diagram explains the FastAPI + React Native + AWS App Runner setup
+3. Architecture diagram explains the FastAPI + React Native + AWS ECS Fargate + RDS Postgres deployment
 4. The owner can speak confidently about every architectural choice
 
 After the demo, the owner uses the app daily with their partner. That's the real test.
