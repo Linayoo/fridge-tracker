@@ -15,7 +15,7 @@ Building toward a 4-week meetup demo. v1 scope is intentionally narrow.
 **Backend:** Python 3.11, FastAPI, SQLAlchemy 2.0, Alembic, PostgreSQL
 **Tooling:** Poetry, Pytest, Ruff, pre-commit
 **Frontend:** Expo SDK 54, React Native, TypeScript, React Navigation v7
-**Deployment:** Docker → AWS App Runner + RDS Postgres + GitHub Actions CI/CD
+**Deployment:** AWS ECS Fargate + RDS Postgres + ALB + Secrets Manager (eu-central-1)
 
 ## Documentation
 
