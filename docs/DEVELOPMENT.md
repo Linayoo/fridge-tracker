@@ -200,3 +200,119 @@ Check the entrypoint logs: `docker compose logs api`. Common causes:
 - Migration file syntax error
 - DB not ready yet (the depends_on healthcheck should prevent this — investigate if it happens)
 - Conflicting migration (someone else edited a migration that was already applied)
+
+## Working with production
+
+The production API runs on AWS ECS Fargate in eu-central-1 behind an ALB.
+All commands below require the AWS CLI configured with the `fridge-tracker-cli`
+credentials and `eu-central-1` as the default region.
+
+### Check task status
+
+```bash
+aws ecs describe-services \
+  --cluster fridge-tracker-cluster \
+  --services fridge-tracker-api-service \
+  --region eu-central-1 \
+  --query 'services[0].{status:status,running:runningCount,desired:desiredCount,deployments:deployments[*].{id:id,status:status,running:runningCount}}'
+```
+
+### Read production logs
+
+```bash
+# List recent log streams (one per task run)
+aws logs describe-log-streams \
+  --log-group-name /ecs/fridge-tracker-api \
+  --order-by LastEventTime \
+  --descending \
+  --region eu-central-1 \
+  --query 'logStreams[0].logStreamName'
+
+# Tail the most recent stream (replace STREAM_NAME with the output above)
+aws logs get-log-events \
+  --log-group-name /ecs/fridge-tracker-api \
+  --log-stream-name STREAM_NAME \
+  --region eu-central-1 \
+  --query 'events[*].message' \
+  --output text
+```
+
+### Shell into a running task (ECS Exec)
+
+ECS Exec is enabled on the service. Use it to inspect the running container:
+
+```bash
+# Get the task ARN
+TASK_ARN=$(aws ecs list-tasks \
+  --cluster fridge-tracker-cluster \
+  --service-name fridge-tracker-api-service \
+  --region eu-central-1 \
+  --query 'taskArns[0]' \
+  --output text)
+
+# Open a shell in the running container
+aws ecs execute-command \
+  --cluster fridge-tracker-cluster \
+  --task "$TASK_ARN" \
+  --container fridge-tracker-api \
+  --interactive \
+  --command "/bin/sh" \
+  --region eu-central-1
+```
+
+This drops you into the container. Useful for running Alembic commands
+manually, checking environment variables, or diagnosing connectivity.
+
+### Deploy a new image to production
+
+```bash
+# 1. Authenticate with ECR
+aws ecr get-login-password --region eu-central-1 \
+  | docker login --username AWS --password-stdin \
+    <account-id>.dkr.ecr.eu-central-1.amazonaws.com
+
+# 2. Build for linux/amd64 (Fargate; Apple Silicon defaults to arm64)
+docker buildx build \
+  --platform linux/amd64 \
+  --provenance=false \
+  --sbom=false \
+  -t <account-id>.dkr.ecr.eu-central-1.amazonaws.com/fridge-tracker-api:latest \
+  backend/
+
+# 3. Push
+docker push <account-id>.dkr.ecr.eu-central-1.amazonaws.com/fridge-tracker-api:latest
+
+# 4. Force ECS to pull :latest and roll a new task
+aws ecs update-service \
+  --cluster fridge-tracker-cluster \
+  --service fridge-tracker-api-service \
+  --force-new-deployment \
+  --region eu-central-1
+```
+
+Rollout takes ~2–3 minutes. The new task runs `alembic upgrade head` before
+serving traffic, so migrations apply automatically.
+
+### Point the frontend at production
+
+In `frontend/.env.local`, set:
+
+```
+EXPO_PUBLIC_API_URL=http://<alb-dns-name>
+```
+
+Find the ALB DNS name:
+
+```bash
+aws elbv2 describe-load-balancers \
+  --names fridge-tracker-alb \
+  --region eu-central-1 \
+  --query 'LoadBalancers[0].DNSName' \
+  --output text
+```
+
+Restart Metro with `--clear` after changing the env file:
+
+```bash
+cd frontend && npx expo start --clear
+```
