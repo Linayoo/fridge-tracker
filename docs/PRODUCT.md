@@ -38,10 +38,13 @@ Categories (fixed list in v1):
 
 These are listed so the data model accommodates them, but they are explicitly out of scope for v1.
 
-**Phase 2** (post-demo):
+**Phase 2** (post-demo, decisions finalized — see `docs/PHASE_2_DECISIONS.md`):
+- Authentication: AWS Cognito (User Pools), JWT verification in FastAPI
+- Sharing model: symmetric shared fridge entity, full access for all members, no roles
+- Sync strategy: refetch on foreground via AppState listener, no real-time/WebSocket
+- Distribution: TestFlight (closed audience — owner + partner + parents)
+- Multi-place support (your fridge + parents' fridge) — follows from the fridge entity above
 - Push notifications for expiring items
-- Multi-place support (your fridge + parents' fridge)
-- Authentication + family member sharing
 
 **Phase 3**:
 - Photo recognition: snap a photo of groceries, auto-add to fridge (Python ML microservice)
