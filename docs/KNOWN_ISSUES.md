@@ -30,16 +30,8 @@ Deploys are manual: `docker buildx build` → `docker push` → `aws ecs update-
 
 The `fridge-tracker-api` ECR repository has tag immutability turned off. Pushing to `:latest` silently overwrites the previous image, making it impossible to roll back to a specific prior image by tag. Fix: re-enable immutability and switch to SHA-based tags (`:$GIT_SHA`) once CI/CD is in place to generate them consistently. Tracked alongside the CI/CD gap.
 
-## Parallel deployment: click-built + Terraform-managed
+## Terraform resource naming: -tf suffix
 
-The Week 3 click-built AWS infrastructure (`fridge-tracker-*`) and the newly-added Terraform-managed infrastructure (`fridge-tracker-tf-*`) are currently running in parallel. Both are healthy and serving traffic on separate ALB URLs.
+~~Resolved 2026-07-16~~ — cutover from the click-built stack to Terraform-managed infrastructure is complete. The click-built `fridge-tracker-*` resources have been deleted; only the Terraform-managed `fridge-tracker-tf-*` resources remain. Cost is back to ~$42/mo.
 
-Total burn rate: ~$84/mo (roughly $42/mo per deployment).
-
-Path to reduce back to ~$42/mo (planned for the next Terraform session):
-1. Update the frontend `EXPO_PUBLIC_API_URL` to the Terraform ALB URL
-2. Verify the app works end-to-end on device against the Terraform deployment
-3. Delete the click-built resources in reverse dependency order: ECS service, cluster, ALB, target group, RDS, ECR, Secrets Manager, IAM roles, security groups
-4. Optionally rename the Terraform resources to drop the `-tf` suffix (via `terraform state mv` + `apply`)
-
-Reason for the parallel period: Path B (rebuild + cutover) was chosen over Path A (terraform import) because it teaches Terraform properly and avoids risky imports. The tradeoff is a short window of double cost, which is well within available AWS credits ($99.95 remaining as of last check).
+Outstanding follow-up: rename the Terraform resources to drop the `-tf` suffix. This is cosmetic — the suffix was a parallel-deployment convenience. Steps when time permits: rename each resource in the Terraform configuration, run `terraform state mv` for each to match the new names, then `terraform apply` to confirm no drift. Optional; the app functions correctly with the current names.
