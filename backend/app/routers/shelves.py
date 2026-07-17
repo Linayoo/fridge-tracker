@@ -2,7 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import Shelf
@@ -15,7 +15,11 @@ router = APIRouter(prefix="/shelves", tags=["shelves"])
 @router.get("", response_model=list[ShelfWithItems])
 def list_shelves(db: Session = Depends(get_db)):
     """List all shelves ordered by position, with inline item summaries."""
-    return db.execute(select(Shelf).order_by(Shelf.position)).scalars().all()
+    return (
+        db.execute(select(Shelf).options(selectinload(Shelf.items)).order_by(Shelf.position))
+        .scalars()
+        .all()
+    )
 
 
 @router.post("", response_model=ShelfOut, status_code=status.HTTP_201_CREATED)
@@ -56,7 +60,9 @@ def reorder_shelves(data: ReorderRequest, db: Session = Depends(get_db)):
 @router.get("/{shelf_id}", response_model=ShelfWithItems)
 def get_shelf(shelf_id: int, db: Session = Depends(get_db)):
     """Get a shelf with all its items."""
-    shelf = db.get(Shelf, shelf_id)
+    shelf = db.execute(
+        select(Shelf).options(selectinload(Shelf.items)).where(Shelf.id == shelf_id)
+    ).scalar_one_or_none()
     if shelf is None:
         raise HTTPException(status_code=404, detail="Shelf not found")
     return shelf
